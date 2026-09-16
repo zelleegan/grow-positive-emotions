@@ -1,33 +1,29 @@
 /*
   data-layer.js — the ONE place the app reads and writes data.
 
-  Why this file exists (Phase 2 / Phase 3 scaffolding):
-  Every save and load in the whole app goes through these functions. Today they
-  talk to the device's own storage (localStorage). When you later add accounts and
-  a server (Supabase, Phase 3), you rewrite ONLY the bodies of these functions to
-  call the server instead — and nothing else in the app has to change.
+  Every save and load in the app goes through these functions. Today they talk to
+  the device's own storage (localStorage). When accounts and a server arrive
+  (Phase 3, Supabase), only the bodies of these functions change.
 
-  Two load-bearing decisions are baked in here from day one:
-    1. Every saved entry is a structured record with a stable `id`, a `date`,
-       a `createdAt` timestamp, the `word`, its `definition`, an optional `note`,
-       and a reserved `imageRef` (null for now — Phase 2 fills it in).
-    2. All access is funneled through this module, so the storage backend is a
-       swap, not a rewrite.
+  What is stored (all on this phone only):
+    - reveal log: one record per revealed word {id, date, createdAt, word, definition, imageRef}
+      (kept for the beta's behavioral logging; not shown in the UI)
+    - favorites: the words the person chose to keep ("My Emotions")
+    - partner: one name, optional, changeable
+    - introSeen: whether the first-open screen has been shown
 
-  Storage caveat (be honest with testers): localStorage is reliable PER BROWSER.
-  Clearing browser data, switching phones, or switching browsers loses history,
-  and iOS Safari can evict it over time. That limitation is exactly what Phase 3
-  (accounts + server) exists to remove.
+  Storage caveat: localStorage is reliable PER BROWSER. Clearing browser data or
+  switching phones loses it, and iOS can evict it after long disuse.
 */
 
 window.CFA_DATA = (function () {
-  var STORAGE_KEY = "cfa_emotion_entries_v1"; // bump the suffix if the shape changes
-  var TODAY_KEY = "cfa_emotion_today_v1";     // remembers today's drawn word
-
-  // ---- internal helpers -------------------------------------------------
+  var LOG_KEY      = "cfa_emotion_entries_v1";
+  var CURRENT_KEY  = "cfa_emotion_current_v1";
+  var FAV_KEY      = "cfa_emotion_favorites_v1";
+  var PARTNER_KEY  = "cfa_emotion_partner_v1";
+  var INTRO_KEY    = "cfa_emotion_intro_seen_v1";
 
   function todayStamp() {
-    // Local calendar day, e.g. "2026-08-06". Used to lock one emotion per day.
     var d = new Date();
     var m = String(d.getMonth() + 1).padStart(2, "0");
     var day = String(d.getDate()).padStart(2, "0");
@@ -35,156 +31,101 @@ window.CFA_DATA = (function () {
   }
 
   function makeId() {
-    // Stable unique id per entry. Prefer crypto.randomUUID where available.
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return "e_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
   }
 
-  function readAll() {
+  function readJSON(key, fallback) {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
   }
 
-  function writeAll(entries) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-      return true;
-    } catch (e) {
-      return false; // storage full or blocked (e.g. private mode)
-    }
+  function writeJSON(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) { return false; }
   }
-
-  // ---- public API (this is the contract the rest of the app depends on) --
 
   return {
     todayStamp: todayStamp,
 
-    /* Is storage usable at all? (private mode / disabled can block it.) */
     isAvailable: function () {
       try {
-        var k = "__cfa_test__";
-        localStorage.setItem(k, "1");
-        localStorage.removeItem(k);
+        localStorage.setItem("__cfa_test__", "1");
+        localStorage.removeItem("__cfa_test__");
         return true;
-      } catch (e) {
-        return false;
-      }
+      } catch (e) { return false; }
     },
 
-    /* The word locked for today, or null if none drawn yet today. */
-    getToday: function () {
-      try {
-        var raw = localStorage.getItem(TODAY_KEY);
-        if (!raw) return null;
-        var t = JSON.parse(raw);
-        return t && t.date === todayStamp() ? t : null;
-      } catch (e) {
-        return null;
-      }
+    /* ---- current word (free reveal: every reveal replaces it) ---------- */
+
+    getCurrent: function () {
+      var c = readJSON(CURRENT_KEY, null);
+      return c && c.word ? c : null;
     },
 
-    /* Lock a word as today's emotion. Creates or updates today's entry. */
-    setToday: function (word, definition) {
-      var stamp = todayStamp();
-      try {
-        localStorage.setItem(TODAY_KEY, JSON.stringify({
-          date: stamp, word: word, definition: definition
-        }));
-      } catch (e) {}
-
-      // Ensure a saved entry exists for today (so history/palette see it).
-      var entries = readAll();
-      var existing = null;
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].date === stamp) { existing = entries[i]; break; }
-      }
-      if (existing) {
-        existing.word = word;
-        existing.definition = definition;
-      } else {
-        entries.push({
-          id: makeId(),
-          date: stamp,
-          createdAt: new Date().toISOString(),
-          word: word,
-          definition: definition,
-          note: "",
-          imageRef: null   // Phase 2 reserves this; stays null until images ship
-        });
-      }
-      writeAll(entries);
-      return this.getToday();
-    },
-
-    /* Save (or clear) today's reflection note. */
-    saveNote: function (note) {
-      var stamp = todayStamp();
-      var entries = readAll();
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].date === stamp) {
-          entries[i].note = note;
-          return writeAll(entries);
-        }
-      }
-      return false; // no entry for today yet (draw first)
-    },
-
-    /* Today's note, or "" if none. */
-    getNote: function () {
-      var stamp = todayStamp();
-      var entries = readAll();
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].date === stamp) return entries[i].note || "";
-      }
-      return "";
-    },
-
-    /*
-      Phase 2 hook — attach an image reference to today's entry.
-      Not wired to any UI yet. When Phase 2 ships, the image input calls this.
-      `ref` can be a data URL (transient/local) or, in Phase 3, a server URL.
-    */
-    setTodayImage: function (ref) {
-      var stamp = todayStamp();
-      var entries = readAll();
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].date === stamp) {
-          entries[i].imageRef = ref;
-          return writeAll(entries);
-        }
-      }
-      return false;
-    },
-
-    /* All entries, newest first — powers history and palette. */
-    getHistory: function () {
-      var entries = readAll();
-      return entries.slice().sort(function (a, b) {
-        return (b.date < a.date) ? -1 : (b.date > a.date) ? 1 : 0;
+    setCurrent: function (word, definition, source) {
+      writeJSON(CURRENT_KEY, { word: word, definition: definition, date: todayStamp() });
+      var log = readJSON(LOG_KEY, []);
+      if (!Array.isArray(log)) log = [];
+      log.push({
+        id: makeId(),
+        date: todayStamp(),
+        createdAt: new Date().toISOString(),
+        word: word,
+        definition: definition,
+        source: source || "reveal",   // "reveal" | "browse" | "favorite"
+        imageRef: null
       });
+      if (log.length > 500) log = log.slice(-500);
+      writeJSON(LOG_KEY, log);
     },
 
-    /* Distinct words ever drawn, for the palette view. */
-    getPalette: function () {
-      var seen = {};
-      var out = [];
-      var entries = this.getHistory();
-      for (var i = 0; i < entries.length; i++) {
-        var w = entries[i].word;
-        if (w && !seen[w]) { seen[w] = true; out.push(w); }
-      }
-      return out;
+    /* Full reveal log, newest first (for future research export). */
+    getHistory: function () {
+      var log = readJSON(LOG_KEY, []);
+      return Array.isArray(log) ? log.slice().reverse() : [];
     },
 
-    /* Count of distinct emotions noticed — the "range" number. */
-    paletteCount: function () {
-      return this.getPalette().length;
+    /* ---- favorites ------------------------------------------------------ */
+
+    getFavorites: function () {
+      var f = readJSON(FAV_KEY, []);
+      return Array.isArray(f) ? f : [];
+    },
+
+    isFavorite: function (word) {
+      return this.getFavorites().indexOf(word) !== -1;
+    },
+
+    toggleFavorite: function (word) {
+      var f = this.getFavorites();
+      var i = f.indexOf(word);
+      if (i === -1) f.push(word); else f.splice(i, 1);
+      writeJSON(FAV_KEY, f);
+      return i === -1; // true if it is now a favorite
+    },
+
+    /* ---- partner (one name, optional, changeable) ---------------------- */
+
+    getPartner: function () {
+      try { return localStorage.getItem(PARTNER_KEY) || ""; } catch (e) { return ""; }
+    },
+
+    setPartner: function (name) {
+      try { localStorage.setItem(PARTNER_KEY, (name || "").trim()); return true; }
+      catch (e) { return false; }
+    },
+
+    /* ---- first-open intro ---------------------------------------------- */
+
+    hasSeenIntro: function () {
+      try { return localStorage.getItem(INTRO_KEY) === "1"; } catch (e) { return true; }
+    },
+
+    markIntroSeen: function () {
+      try { localStorage.setItem(INTRO_KEY, "1"); } catch (e) {}
     }
   };
 })();

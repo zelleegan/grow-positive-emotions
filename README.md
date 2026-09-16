@@ -2,7 +2,7 @@
 
 A daily positive-emotion practice: draw one emotion, hold it against the reframe
 *"What does [emotion] make possible today?"*, optionally jot a reflection, and
-watch your palette of noticed emotions grow.  Runs on iPhone and Android in the
+watch your palette of noticed emotions grow. Runs on iPhone and Android in the
 browser, and installs to the home screen.
 
 This is the **Phase 1 beta build** with **Phase 2 scaffolding** already inside it

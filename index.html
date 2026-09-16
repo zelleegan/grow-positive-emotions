@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#f6fbfe">
   <title>Positive Emotion Practice</title>
 
-  <!-- PWA manifest + iOS home-screen support -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,324 +14,323 @@
 
   <style>
     :root {
-      --deep-blue: #0b3a5e;
-      --mid-blue:  #1f6f9f;
-      --sky:       #e6f4fb;
-      --pale:      #f6fbfe;
-      --white:     #ffffff;
-      --orange:    #f47b20;
-      --orange-soft:#fdead9;
-      --ink:       #123049;
-      --ink-soft:  rgba(18, 48, 73, 0.66);
-      --ink-faint: rgba(18, 48, 73, 0.42);
-      --hairline:  rgba(11, 58, 94, 0.10);
-      --radius:    26px;
-      --tap:       52px; /* comfortable thumb target */
+      --blue-dark:  #045184;
+      --blue:       #1F5094;
+      --blue-soft:  #EAF6FC;
+      --blue-pale:  #F8FCFF;
+      --white:      #ffffff;
+      --orange:     #E9822A;
+      --orange-soft:#FDEBDD;
+      --ink:        #123049;
+      --ink-soft:   #5b6f82;
+      --ink-faint:  #8a9bab;
+      --hairline:   rgba(4, 81, 132, 0.10);
+      --radius:     26px;
+      --tap:        54px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-    }
-
+    html, body { margin: 0; padding: 0; min-height: 100%; }
     body {
       font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(circle at 84% 6%, rgba(244,123,32,.10), transparent 30%),
-        radial-gradient(circle at 8% 96%, rgba(31,111,159,.12), transparent 32%),
-        linear-gradient(160deg, var(--white) 0%, var(--pale) 55%, var(--sky) 100%);
+      background: linear-gradient(170deg, var(--white) 0%, #f2f8fc 50%, #e6f0f7 100%);
       background-attachment: fixed;
       -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
     }
-
-    .app {
-      max-width: 560px;
-      margin: 0 auto;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      padding:
-        calc(env(safe-area-inset-top) + 20px)
-        clamp(16px, 5vw, 26px)
-        calc(env(safe-area-inset-bottom) + 18px);
-    }
+    button { font: inherit; cursor: pointer; }
+    [hidden] { display: none !important; }
 
     /* ---- header ---- */
-    .kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      color: var(--mid-blue);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .16em;
-      text-transform: uppercase;
+    .top {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: calc(env(safe-area-inset-top) + 10px) 18px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
     }
-    .kicker::before {
-      content: "";
-      width: 8px; height: 8px;
-      border-radius: 99px;
-      background: var(--orange);
-      box-shadow: 0 0 0 5px rgba(244,123,32,.12);
-      flex: none;
+    .logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--blue); }
+    .logo-link img { height: 44px; width: auto; display: block; }
+    .logo-text { font-weight: 700; font-size: 15px; line-height: 1.15; }
+    .logo-text small { display: block; font-weight: 500; font-size: 11px; color: var(--ink-soft); }
+    .menu-btn {
+      appearance: none; border: 1px solid var(--hairline); background: var(--white);
+      width: 48px; height: 48px; border-radius: 14px;
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      box-shadow: 0 6px 18px rgba(4,81,132,.08);
     }
-    .date-line {
-      margin: 10px 0 0;
-      color: var(--ink-faint);
-      font-size: 13px;
-      letter-spacing: .01em;
-    }
+    .menu-btn span { width: 22px; height: 2.5px; border-radius: 2px; background: var(--orange); }
 
-    /* ---- the card: the emotion is the hero ---- */
+    /* ---- menu ---- */
+    .menu {
+      position: fixed; inset: 0; z-index: 30; display: flex; justify-content: flex-end;
+      background: rgba(18,48,73,.28);
+    }
+    .menu-panel {
+      width: min(300px, 82vw); height: 100%;
+      background: var(--white);
+      padding: calc(env(safe-area-inset-top) + 24px) 22px 30px;
+      display: flex; flex-direction: column; gap: 6px;
+      box-shadow: -10px 0 40px rgba(4,81,132,.16);
+    }
+    .menu-panel .menu-title { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--orange); margin: 0 0 12px 8px; }
+    .menu-panel button {
+      appearance: none; border: 0; background: transparent; text-align: left;
+      padding: 14px 10px; border-radius: 12px; font-size: 18px; font-weight: 600; color: var(--blue-dark);
+    }
+    .menu-panel button.active { background: var(--blue-soft); }
+    .menu-panel .close { margin-top: auto; color: var(--ink-faint); font-size: 15px; font-weight: 500; }
+
+    /* ---- page frame ---- */
+    .app { max-width: 560px; margin: 0 auto; padding: 22px clamp(16px, 5vw, 26px) 30px; min-height: calc(100dvh - 80px); display: flex; flex-direction: column; }
+    .screen { flex: 1 1 auto; display: flex; flex-direction: column; }
+
+    .kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .kicker::before { content: ""; width: 9px; height: 9px; border-radius: 99px; background: var(--orange); box-shadow: 0 0 0 5px rgba(233,130,42,.14); flex: none; }
+    h1 { margin: 14px 0 10px; font-size: clamp(30px, 8.4vw, 40px); line-height: 1.08; font-weight: 700; color: var(--blue-dark); letter-spacing: -.01em; }
+    .subtitle { margin: 0 0 18px; font-size: 17px; line-height: 1.5; color: var(--ink-soft); }
+    .body-copy { font-size: 17px; line-height: 1.6; color: var(--ink); }
+    .body-copy p { margin: 0 0 16px; }
+    .body-copy h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--orange); margin: 26px 0 10px; }
+    .body-copy ol { padding-left: 22px; margin: 0 0 16px; }
+    .body-copy li { margin-bottom: 12px; }
+    .body-copy strong { color: var(--blue-dark); }
+
+    /* ---- the card ---- */
     .card {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      margin: 18px 0;
-      padding: clamp(24px, 6vw, 40px) clamp(18px, 5vw, 30px);
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 26px 20px 28px;
       border-radius: var(--radius);
-      background:
-        radial-gradient(circle at 92% 8%, rgba(244,123,32,.10), transparent 30%),
-        linear-gradient(150deg, var(--white), #f2f9fe);
+      background: radial-gradient(circle at 92% 6%, rgba(233,130,42,.14), transparent 34%), linear-gradient(150deg, var(--white), #f1f8fe);
       border: 1px solid var(--hairline);
-      box-shadow: 0 20px 54px rgba(11,58,94,.12);
-      min-height: 0;
+      box-shadow: 0 18px 48px rgba(4,81,132,.10);
     }
-    .card-label {
-      color: var(--orange);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      margin-bottom: 18px;
-    }
-    .word {
-      display: block;
-      width: 100%;
-      color: var(--deep-blue);
-      font-weight: 700;
-      line-height: 1.02;
-      letter-spacing: -.02em;
-      white-space: nowrap;      /* auto-fit keeps it on one line */
-      font-size: 64px;          /* JS shrinks this to fit */
-      transition: opacity .16s ease, transform .16s ease;
-    }
+    .card-label { color: var(--orange); font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; }
+    .word { display: block; width: 100%; color: var(--blue-dark); font-weight: 700; line-height: 1.02; letter-spacing: -.02em; white-space: nowrap; font-size: 64px; transition: opacity .16s ease, transform .16s ease; }
     .word.changing { opacity: 0; transform: translateY(6px); }
+    .definition { max-width: 30ch; margin: 14px auto 0; color: var(--ink-soft); font-size: 18px; line-height: 1.5; }
 
-    .definition {
-      max-width: 30ch;
-      margin: 16px auto 0;
-      color: var(--ink-soft);
-      font-size: clamp(15px, 4vw, 17px);
-      line-height: 1.5;
-    }
-
-    /* the signature reframe — quiet but always present */
-    .prompt {
-      margin: 22px auto 0;
-      max-width: 26ch;
-      color: var(--deep-blue);
-      font-size: clamp(17px, 4.6vw, 20px);
-      line-height: 1.35;
-      font-weight: 600;
-    }
-
-    /* ---- reflection ---- */
-    .reflect {
-      margin-top: 18px;
-    }
-    .reflect summary {
-      list-style: none;
-      cursor: pointer;
-      color: var(--mid-blue);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: .01em;
-      padding: 8px 2px;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .reflect summary::-webkit-details-marker { display: none; }
-    .reflect summary::before {
-      content: "＋";
-      font-weight: 700;
-      color: var(--orange);
-    }
-    .reflect[open] summary::before { content: "－"; }
-    .reflect textarea {
-      width: 100%;
-      margin-top: 8px;
-      min-height: 92px;
-      padding: 14px 15px;
-      border-radius: 16px;
-      border: 1px solid var(--hairline);
-      background: var(--white);
-      color: var(--ink);
-      font: inherit;
-      font-size: 16px; /* >=16px stops iOS zoom-on-focus */
-      line-height: 1.5;
-      resize: vertical;
-    }
-    .reflect textarea:focus {
-      outline: none;
-      border-color: var(--mid-blue);
-      box-shadow: 0 0 0 3px rgba(31,111,159,.14);
-    }
-    .reflect .note-status {
-      margin-top: 6px;
-      font-size: 12px;
+    .heart {
+      appearance: none; border: 0; background: transparent;
+      position: absolute; top: 12px; right: 12px;
+      width: 44px; height: 44px; border-radius: 99px;
+      display: inline-flex; align-items: center; justify-content: center;
       color: var(--ink-faint);
-      min-height: 15px;
     }
+    .heart svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .heart.on { color: var(--orange); }
+    .heart.on svg { fill: currentColor; }
 
-    /* ---- actions ---- */
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 16px;
-    }
-    button {
-      appearance: none;
-      border: 0;
-      border-radius: 999px;
-      min-height: var(--tap);
-      padding: 14px 20px;
-      font: inherit;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: .01em;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-primary {
-      color: var(--white);
-      background: linear-gradient(135deg, var(--deep-blue), var(--mid-blue));
-      box-shadow: 0 12px 26px rgba(11,58,94,.22);
-    }
+    /* ---- buttons ---- */
+    .actions { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+    .btn { appearance: none; border: 0; border-radius: 999px; min-height: var(--tap); padding: 14px 20px; font-size: 18px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+    .btn-primary { color: var(--white); background: linear-gradient(135deg, var(--blue-dark), var(--blue)); box-shadow: 0 12px 26px rgba(4,81,132,.22); }
     .btn-primary:active { transform: translateY(1px); }
-    .btn-row {
-      display: flex;
-      gap: 10px;
-    }
-    .btn-secondary {
-      flex: 1 1 0;
-      color: var(--deep-blue);
-      background: var(--white);
-      border: 1px solid var(--hairline);
-    }
-    .btn-secondary:active { background: #f0f7fc; }
+    .btn-orange { color: var(--blue-dark); background: var(--orange-soft); border: 1.5px solid rgba(233,130,42,.45); }
+    .btn-ghost { color: var(--blue-dark); background: var(--white); border: 1px solid var(--hairline); }
+    .btn-row { display: flex; gap: 12px; }
+    .btn-row .btn { flex: 1 1 0; font-size: 16px; padding: 12px 12px; white-space: nowrap; }
+    .btn-small { min-height: 44px; font-size: 15px; padding: 10px 16px; width: auto; }
 
-    .status {
-      min-height: 18px;
-      margin-top: 12px;
-      text-align: center;
-      color: var(--ink-faint);
-      font-size: 13px;
+    .dd-wrap { position: relative; flex: 1 1 0; }
+    .dd-wrap .btn { width: 100%; }
+    .dd-menu {
+      position: absolute; left: 0; min-width: 200px; top: calc(100% + 8px); z-index: 10;
+      background: var(--white); border: 1px solid var(--hairline); border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(4,81,132,.16); overflow: hidden;
     }
+    .dd-menu a { display: block; padding: 14px 18px; text-decoration: none; color: var(--blue-dark); font-weight: 600; font-size: 16px; border-top: 1px solid var(--hairline); }
+    .dd-menu a:first-child { border-top: 0; }
 
-    /* ---- palette footer ---- */
-    .palette {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--hairline);
-    }
-    .palette summary {
-      list-style: none;
-      cursor: pointer;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 4px 2px;
-    }
-    .palette summary::-webkit-details-marker { display: none; }
-    .palette .p-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--ink);
-    }
-    .palette .p-count {
-      font-size: 13px;
-      color: var(--mid-blue);
-      font-weight: 700;
-    }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 12px;
-    }
-    .chip {
-      font-size: 13px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: var(--sky);
-      color: var(--deep-blue);
-      border: 1px solid var(--hairline);
-    }
-    .chip.empty {
-      background: transparent;
-      color: var(--ink-faint);
-      border-style: dashed;
-    }
+    .share-copy { margin: 20px 0 0; font-size: 17px; line-height: 1.55; color: var(--ink-soft); }
+    .status { min-height: 18px; margin-top: 10px; text-align: center; color: var(--ink-faint); font-size: 13px; }
 
-    /* respect reduced-motion */
-    @media (prefers-reduced-motion: reduce) {
-      .word { transition: none; }
-      .btn-primary:active { transform: none; }
-    }
+    /* ---- browse / favorites lists ---- */
+    .list { list-style: none; margin: 8px 0 0; padding: 0; }
+    .list li { border-bottom: 1px solid var(--hairline); }
+    .list .row { appearance: none; border: 0; background: transparent; width: 100%; text-align: left; padding: 16px 4px; font-size: 20px; font-weight: 600; color: var(--blue-dark); display: flex; justify-content: space-between; align-items: center; }
+    .list .row .chev { color: var(--ink-faint); font-size: 14px; transition: transform .15s; }
+    .list li.open .row .chev { transform: rotate(90deg); }
+    .list .detail { padding: 0 4px 18px; }
+    .list .detail p { margin: 0 0 14px; color: var(--ink-soft); font-size: 17px; line-height: 1.5; }
+    .list .detail .btn-row { align-items: center; }
+    .list .heart { position: static; }
+    .empty { padding: 30px 8px; color: var(--ink-faint); font-size: 17px; line-height: 1.5; text-align: center; }
+
+    .field { margin-top: 10px; }
+    .field label { display: block; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+    .field input { width: 100%; font: inherit; font-size: 17px; padding: 13px 15px; border-radius: 14px; border: 1px solid var(--hairline); background: var(--white); color: var(--ink); }
+    .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(31,80,148,.14); }
+    .field small { display: block; margin-top: 6px; color: var(--ink-faint); font-size: 13px; }
+
+    /* ---- sheet (share choice) ---- */
+    .sheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; background: rgba(18,48,73,.32); }
+    .sheet-panel { width: 100%; background: var(--white); border-radius: 24px 24px 0 0; padding: 22px 22px calc(env(safe-area-inset-bottom) + 22px); display: flex; flex-direction: column; gap: 10px; }
+    .sheet-panel h3 { margin: 0 0 4px; font-size: 20px; color: var(--blue-dark); }
+    .sheet-panel p { margin: 0 0 10px; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+
+    /* ---- intro overlay ---- */
+    .intro { position: fixed; inset: 0; z-index: 50; overflow-y: auto; background: linear-gradient(170deg, var(--white) 0%, #f2f8fc 50%, #e6f0f7 100%); }
+    .intro .inner { max-width: 560px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 34px) clamp(18px, 5vw, 26px) calc(env(safe-area-inset-bottom) + 30px); }
+    .intro h1 { font-size: clamp(28px, 7.8vw, 36px); }
+
+    /* ---- footer ---- */
+    .foot { margin-top: 34px; padding: 26px 18px calc(env(safe-area-inset-bottom) + 26px); background: var(--blue); color: var(--white); text-align: center; font-size: 15px; line-height: 1.6; }
+    .foot a { color: var(--white); text-decoration: none; opacity: .9; }
+    .foot .small { font-size: 12px; opacity: .7; margin-top: 12px; }
+
+    @media (prefers-reduced-motion: reduce) { .word { transition: none; } }
   </style>
 </head>
 <body>
-  <main class="app">
-    <header>
-      <div class="kicker">Positive Emotion Practice</div>
-      <div class="date-line" id="date-line"></div>
-    </header>
 
-    <section class="card" aria-live="polite">
-      <div class="card-label">Today's emotion</div>
-      <div class="word" id="word">Joyful</div>
-      <div class="definition" id="definition">Bright with delight, gladness, and aliveness.</div>
-      <div class="prompt" id="prompt">What does Joyful make possible today?</div>
+  <header class="top">
+    <a class="logo-link" href="#home" id="logo-link" aria-label="Positive Emotion Practice home">
+      <img src="images/logo.png" alt="" id="logo-img" onerror="this.hidden=true;document.getElementById('logo-fallback').hidden=false">
+      <span class="logo-text" id="logo-fallback" hidden><small>The Center for</small>Collaborative Awareness</span>
+    </a>
+    <button class="menu-btn" id="menu-open" type="button" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </header>
+
+  <nav class="menu" id="menu" hidden>
+    <div class="menu-panel">
+      <div class="menu-title">Positive Emotion Practice</div>
+      <button type="button" data-go="home">Reveal</button>
+      <button type="button" data-go="browse">Browse All Emotions</button>
+      <button type="button" data-go="favorites">My Emotions</button>
+      <button type="button" data-go="instructions">Instructions</button>
+      <button type="button" class="close" id="menu-close">Close</button>
+    </div>
+  </nav>
+
+  <main class="app">
+
+    <!-- ===== HOME ===== -->
+    <section class="screen" id="screen-home">
+      <div class="kicker">Positive Emotion Practice</div>
+      <h1>Reveal &amp; Share a Positive Emotion</h1>
+      <p class="subtitle">Choose a positive emotion to track. Find an image to represent it. Share them with a friend.</p>
+
+      <div class="card" aria-live="polite">
+        <button class="heart" id="heart" type="button" aria-label="Save to My Emotions" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.2C1.2 8.6 3.3 5 6.8 5c2 0 3.4 1.1 4.2 2.3C11.8 6.1 13.2 5 15.2 5c3.5 0 5.6 3.6 4.3 6.8C19.5 16.4 12 21 12 21z"/></svg>
+        </button>
+        <div class="card-label">Today's emotion</div>
+        <div class="word" id="word">Joyful</div>
+        <div class="definition" id="definition">Bright with delight, gladness, and aliveness.</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="reveal" type="button">Reveal an Emotion</button>
+        <div class="btn-row">
+          <div class="dd-wrap">
+            <button class="btn btn-orange" id="image-btn" type="button" aria-haspopup="true" aria-expanded="false">Find Image <span aria-hidden="true">&#9662;</span></button>
+            <div class="dd-menu" id="image-menu" role="menu" hidden>
+              <a role="menuitem" data-source="google" href="#" target="_blank" rel="noopener">Google Images</a>
+              <a role="menuitem" data-source="unsplash" href="#" target="_blank" rel="noopener">Unsplash</a>
+              <a role="menuitem" data-source="pexels" href="#" target="_blank" rel="noopener">Pexels</a>
+            </div>
+          </div>
+          <button class="btn btn-ghost" id="share" type="button">Share</button>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+
+      <p class="share-copy" id="share-copy">Share your daily emotion word and image with a friend. Collaboratively expand your range of positive emotion awareness and experience!</p>
     </section>
 
-    <details class="reflect" id="reflect">
-      <summary>Add a reflection</summary>
-      <textarea id="note" placeholder="Where did you feel a flicker of this? Where could you make a little more room for it?"></textarea>
-      <div class="note-status" id="note-status"></div>
-    </details>
+    <!-- ===== BROWSE ===== -->
+    <section class="screen" id="screen-browse" hidden>
+      <div class="kicker">Positive Emotion Practice</div>
+      <h1>Browse Positive Emotions</h1>
+      <p class="subtitle">Choose whatever draws you today.</p>
+      <ul class="list" id="browse-list"></ul>
+    </section>
 
-    <div class="actions">
-      <button class="btn-primary" id="draw" type="button">Draw today's emotion</button>
-      <div class="btn-row">
-        <button class="btn-secondary" id="another" type="button">Draw another</button>
-        <button class="btn-secondary" id="copy" type="button">Copy</button>
+    <!-- ===== FAVORITES ===== -->
+    <section class="screen" id="screen-favorites" hidden>
+      <div class="kicker">Positive Emotion Practice</div>
+      <h1>My Emotions</h1>
+      <p class="subtitle">The words you want to remember. Saved on this phone only.</p>
+      <ul class="list" id="fav-list"></ul>
+    </section>
+
+    <!-- ===== INSTRUCTIONS ===== -->
+    <section class="screen" id="screen-instructions" hidden>
+      <div class="kicker">Positive Emotion Practice</div>
+      <h1>What if joy could become as familiar as stress?</h1>
+      <div class="body-copy">
+        <p>Your brain continually builds pathways around what you notice and experience. Stress pathways get a lot of practice. This practice gives your brain more positive experiences to recognize and return to.</p>
+        <p>Most people can name a wide range of negative emotions but have far fewer words for the positive feelings available to them. Expanding that vocabulary builds new neural pathways &mdash; ones that can begin to override the stressful patterns running on autopilot.</p>
+
+        <h2>The practice</h2>
+        <ol>
+          <li><strong>Reveal one emotion each day.</strong> You don't need to already feel it. You're widening your range of what's possible.</li>
+          <li><strong>Find it visually.</strong> Do a quick image search for the word and scroll until an image stands out. Save it to your photos.</li>
+          <li><strong>Send the word and the image to your partner.</strong> Keep it simple. Sharing the emotion is enough.</li>
+          <li><strong>Track it through the day.</strong> Look for it everywhere &mdash; in yourself, in others, in your surroundings. Hold it lightly and see what it opens up.</li>
+        </ol>
+
+        <h2>Why a partner</h2>
+        <p>Naming a feeling for another person is how the brain learns to recognize it &mdash; and it grows connection with someone who matters to you. All your partner needs to do is receive the word and the image. If they want to, they can send their own positive emotion back. Sometimes people only want to receive; sometimes they want to send. Both are the practice.</p>
+
+        <div class="field">
+          <label for="partner-input">Your partner</label>
+          <input id="partner-input" type="text" autocomplete="off" placeholder="A name (optional)">
+          <small>Stays on this phone. Change it any time.</small>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="partner-save" type="button">Save</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    The Center for Collaborative Awareness<br>
+    <a href="mailto:conversations@collaborativeawareness.com">conversations@collaborativeawareness.com</a>
+    <div class="small">&copy; 2026 The Center for Collaborative Awareness</div>
+  </footer>
+
+  <!-- ===== SHARE SHEET ===== -->
+  <div class="sheet" id="share-sheet" hidden>
+    <div class="sheet-panel">
+      <h3 id="share-title">Share Joyful</h3>
+      <p>Add the image you saved to your photos, or share the word on its own.</p>
+      <button class="btn btn-primary" id="share-with-image" type="button">Add image from Photos</button>
+      <button class="btn btn-ghost" id="share-text-only" type="button">Share without image</button>
+      <button class="btn btn-ghost btn-small" id="share-cancel" type="button" style="align-self:center;border:0;color:var(--ink-faint)">Cancel</button>
+      <input type="file" id="image-file" accept="image/*" hidden>
+    </div>
+  </div>
+
+  <!-- ===== FIRST-OPEN INTRO ===== -->
+  <div class="intro" id="intro" hidden>
+    <div class="inner">
+      <div class="kicker">Positive Emotion Practice</div>
+      <h1>What if joy could become as familiar as stress?</h1>
+      <div class="body-copy">
+        <p>Your brain builds pathways around what you notice. Stress pathways get a lot of practice. This is practice for the other kind.</p>
+        <p>Each day, reveal one positive emotion. Find an image that captures it. Send both to one person. You don't need to feel the emotion first &mdash; you're widening your range.</p>
+        <p>Sending it to someone is the part that makes it stick. Naming a feeling for another person is how the brain learns to recognize it, while growing connection with someone who matters to you. All your partner needs to do is receive it. If they want to, they can send their own positive emotion back.</p>
+
+        <h2>Who's your partner?</h2>
+        <p>Pick one person &mdash; a friend, partner, sibling, colleague. Let them know a word is coming most days. That's all they need to do.</p>
+        <div class="field">
+          <label for="intro-partner">Their name</label>
+          <input id="intro-partner" type="text" autocomplete="off" placeholder="Optional">
+          <small>Stays on this phone only. You can change it any time.</small>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="intro-begin" type="button">Begin</button>
+        </div>
       </div>
     </div>
-    <div class="status" id="status">Ready</div>
-
-    <details class="palette" id="palette-wrap">
-      <summary>
-        <span class="p-title">Your palette</span>
-        <span class="p-count" id="p-count">0 emotions</span>
-      </summary>
-      <div class="chips" id="chips"></div>
-    </details>
-  </main>
+  </div>
 
   <script src="emotions-data.js"></script>
   <script src="data-layer.js"></script>
